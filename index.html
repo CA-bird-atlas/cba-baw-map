@@ -710,7 +710,7 @@ async function init() {
     });
 
     if (bounds.length > 0) {
-      map.fitBounds(L.latLngBounds(bounds).pad(0.03));
+      map.fitBounds(L.latLngBounds(bounds).pad(0.08));
     }
 
     document.getElementById('count-bar').textContent = `${allEvents.length} events`;
