@@ -116,6 +116,11 @@
 .share-btn:hover {
   background: rgba(255,255,255,0.18);
 }
+
+.share-btn:last-child {
+  border-color: var(--com-light);
+  color: var(--com-light);
+}
   /* Main layout */
   #main {
     display: flex;
@@ -384,6 +389,7 @@
 <div id="share-buttons">
   <button class="share-btn" onclick="sharePage(this)">Share</button>
   <button class="share-btn" onclick="openEmbed()">Embed</button>
+    <button class="share-btn" onclick="openSubmitForm()">Submit an event</button>
 </div>
   </div>
   <div id="main">
@@ -767,6 +773,10 @@ function copyEmbed() {
   const textarea = document.getElementById("embed-code");
   textarea.select();
   navigator.clipboard.writeText(textarea.value);
+}
+
+function openSubmitForm() {
+  window.open("https://docs.google.com/forms/d/e/1FAIpQLScOZcFmjIByC_z_6L0rtfqZyaLGNjJzFXrb3K_v50ScZAzO6g/viewform", "_blank");
 }
 </script>
 </body>
