@@ -46,81 +46,71 @@
     max-height: 100vh;
   }
 
-  /* Header */
-  #header {
-    background: var(--header-bg);
-    color: var(--header-text);
-    padding: 12px 20px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: right;
-    gap: 12px;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-  }
-  #header h1 {
-    font-family: 'DM Serif Display', serif;
-    font-weight: 400;
-    letter-spacing: 0.01em;
-    color: #1a1a1a;
-    line-height: 1.2;
-    font-size: 18px;
-  }
-  #header h1 .pre {
-    font-size: 16px;
-    font-weight: 500;
-    letter-spacing: 0.01em;
-    color: rgba(255,255,255,0.8);
-    font-family: 'DM Serif Display', serif;
-  }
-  #header h1 .big {
-    font-size: 22px;
-    font-weight: 700;
-    color: white;
-    letter-spacing: -0.01em;
-  }
-  #header h1 .year {
-    font-size: 14px;
-    font-weight: 500;
-    font-style: normal;
-    color: #6ee7a0;
-    margin-left: 6px;
-    letter-spacing: 0.01em;
-    font-family: 'DM Sans', sans-serif;
-  }
-#header .subtitle {
-  font-size: 12px;
-  color: rgba(255,255,255,0.45);
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-
-  line-height: 1;
+#header {
+  background: var(--header-bg);
+  color: var(--header-text);
+  padding: 8px 14px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  flex-wrap: wrap;
 }
-  
-  #share-buttons {
+#header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: #1a1a1a;
+  line-height: 1.2;
+  font-size: 15px;
+  white-space: nowrap;
+}
+#header h1 .pre {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  font-family: 'DM Serif Display', serif;
+}
+#header h1 .big {
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.01em;
+}
+#header h1 .year {
+  font-size: 11px;
+  font-weight: 500;
+  font-style: normal;
+  color: #6ee7a0;
+  margin-left: 5px;
+  letter-spacing: 0.01em;
+  font-family: 'DM Sans', sans-serif;
+}
+#header .subtitle {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  white-space: nowrap;
+}
+#share-buttons {
   margin-left: auto;
   display: flex;
   gap: 8px;
   align-items: center;
 }
-
 .share-btn {
   font-family: 'DM Sans', sans-serif;
   font-size: 11px;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border-radius: 6px;
   border: 1px solid rgba(255,255,255,0.25);
   background: rgba(255,255,255,0.08);
   color: rgba(255,255,255,0.9);
   cursor: pointer;
   transition: all 0.15s;
+  white-space: nowrap;
 }
-
-.share-btn:hover {
-  background: rgba(255,255,255,0.18);
-}
-
+.share-btn:hover { background: rgba(255,255,255,0.18); }
 .share-btn:last-child {
   border-color: var(--com-light);
   color: var(--com-light);
@@ -130,7 +120,35 @@
     display: flex;
     flex: 1;
     overflow: hidden;
+    position: relative; /* add this — needed for absolute child */
   }
+
+.map-submit-btn {
+  position: absolute;
+  bottom: 24px;
+  left: 374px; /* sidebar width (360) + some breathing room */
+  z-index: 1000;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(26,58,42,0.85);
+  color: rgba(255,255,255,0.9);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s;
+}
+.map-submit-btn:hover {
+  background: rgba(26,58,42,1);
+}
+
+@media (max-width: 700px) {
+  .map-submit-btn {
+    left: 12px;
+    bottom: 24px;
+  }
+}
 
   /* Sidebar */
   #sidebar {
@@ -377,7 +395,6 @@
     #main { flex-direction: column; }
     #sidebar { width: 100%; min-width: unset; height: 50vh; border-right: none; border-bottom: 1px solid var(--border); }
     #map { height: 50vh; flex: none; }
-    #header { flex-direction: column; gap: 2px; }
   }
 </style>
 </head>
@@ -385,18 +402,16 @@
 <div id="app">
   <div id="header">
 <a href="https://californiabirdatlas.org" target="_blank" rel="noopener"
-   style="width:32px;height:32px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0; text-decoration:none;">
+   style="width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none;">
   <img src="https://images.squarespace-cdn.com/content/v1/68daf71f4bdb0b427f11d8b1/5a538607-bc04-4131-97f3-9bcd1c8b3848/favicon.ico?format=100w"
        alt="California Bird Atlas logo"
-       style="width:30px;height:30px;object-fit:contain;">
+       style="width:22px;height:22px;object-fit:contain;">
 </a>
-    <h1><span class="pre">California Bird Atlas </span><span class="big">Big Weekend</span><span class="year"> 2026</span></h1>
-    <span class="subtitle" id="header-count"></span>
-
-<div id="share-buttons">
-    <button class="share-btn" onclick="openSubmitForm()">Submit an event</button>
+<div style="display:flex; flex-wrap:wrap; align-items:baseline; gap:0 8px;">
+      <h1><span class="pre">California Bird Atlas </span><span class="big">Big Weekend</span><span class="year"> 2026</span></h1>
+      <span class="subtitle" id="header-count"></span>
+    </div>
 </div>
-  </div>
   <div id="main">
     <div id="sidebar">
       <div id="filters">
@@ -415,6 +430,7 @@
       </div>
     </div>
     <div id="map"></div>
+    <button class="map-submit-btn" onclick="openSubmitForm()">Submit event</button>
   </div>
 </div>
 
