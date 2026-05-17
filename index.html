@@ -394,8 +394,6 @@
     <span class="subtitle" id="header-count"></span>
 
 <div id="share-buttons">
-  <button class="share-btn" onclick="sharePage(this)">Share</button>
-  <button class="share-btn" onclick="openEmbed()">Embed</button>
     <button class="share-btn" onclick="openSubmitForm()">Submit an event</button>
 </div>
   </div>
@@ -744,19 +742,6 @@ function sharePage(btn) {
   }
 
   navigator.clipboard.writeText(url).then(() => {
-    const original = btn.textContent;
-    btn.textContent = "Copied!";
-    setTimeout(() => btn.textContent = original, 1200);
-  });
-}
-
-function copyLink() {
-  const url = window.location.href;
-
-  navigator.clipboard.writeText(url).then(() => {
-    const btn = document.querySelector('[onclick="sharePage()"]');
-    if (!btn) return;
-
     const original = btn.textContent;
     btn.textContent = "Copied!";
     setTimeout(() => btn.textContent = original, 1200);
