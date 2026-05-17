@@ -369,8 +369,6 @@
 // =============================================================
 const SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfQUd290tWehoxl2cIOKry9hKR4XddAT4Iv1qf1s3xAlHchS-ke4qPq6ddIWNUaIAfs9aTHAkluLy3/pub?gid=0&single=true&output=csv";
-//  ^ Replace with "Publish to web" CSV link from Google Sheets.
-//  File → Share → Publish to web → Sheet tab → CSV → Copy link
 
 //  Expected columns (order doesn't matter, match by header name):
 //  Contact, Organizer, Event Name, Date of Event, Time, Location,
@@ -384,9 +382,10 @@ const map = L.map('map', {
   zoomControl: true
 });
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  maxZoom: 19
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains: 'abcd',
+  maxZoom: 20
 }).addTo(map);
 
 let allEvents = [];
