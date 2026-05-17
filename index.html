@@ -353,7 +353,7 @@
 <body>
 <div id="app">
   <div id="header">
-    <div style="width:32px;height:32px;border-radius:50%;background:#fff;border:8px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <div style="width:32px;height:32px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
       <img src="https://images.squarespace-cdn.com/content/v1/68daf71f4bdb0b427f11d8b1/5a538607-bc04-4131-97f3-9bcd1c8b3848/favicon.ico?format=100w" alt="California Bird Atlas logo" style="width:30px;height:30px;object-fit:contain;">
     </div>
     <h1><span class="pre">California Bird Atlas </span><span class="big">Big Weekend</span><span class="year"> 2026</span></h1>
@@ -365,7 +365,7 @@
         <select id="filter-type">
           <option value="">All event types</option>
           <option value="Field Trip">Field Trip</option>
-          <option value="Community">Community</option>
+          <option value="Community">Community Event</option>
         </select>
         <select id="filter-date">
           <option value="">All dates</option>
@@ -468,6 +468,11 @@ function typeCls(t) { return t === 'Community' ? 'com' : 'ft'; }
 // ---- Day name from date string (flexible) ----
 function dayName(dateStr) {
   if (!dateStr) return '';
+  // detect ranges like "6/5-6/7/2026"
+  if (dateStr.includes('-') && dateStr.replace(/\d/g,'').includes('-')) {
+    const parts = dateStr.split('-');
+    if (parts.length >= 2 && parts[0].includes('/')) return 'Multiday';
+  }
   const d = new Date(dateStr);
   if (isNaN(d)) return dateStr;
   return d.toLocaleDateString('en-US', { weekday: 'long' });
@@ -507,7 +512,7 @@ function buildCard(ev, idx) {
         </div>
         <div class="card-meta">
           ${dateDisplay}<span class="dot">·</span>${ev['Time'] || ''}
-          ${ev['Organizer'] ? `<br><span style="font-weight:500;color:var(--text)">Organizer:</span> ${ev['Organizer']}` : ''}
+          ${ev['Organizer'] ? `<br><span style="color:var(--text-muted)">Organizer:</span> <span style="font-weight:500;color:var(--text)">${ev['Organizer']}</span>` : ''}
         </div>
       </div>
     </div>
@@ -645,21 +650,17 @@ async function init() {
     // Sort north to south (highest lat first)
     allEvents.sort((a, b) => parseFloat(b['Lat'] || 0) - parseFloat(a['Lat'] || 0));
 
-    // Build date filter options dynamically from actual event dates
-    const seen = new Map();
-    allEvents.forEach(ev => {
-      if (ev._day && !seen.has(ev._day)) seen.set(ev._day, ev._dayLabel);
-    });
+    // Build date filter options — hardcoded
     const dateSelect = document.getElementById('filter-date');
-    dateSelect.innerHTML = '<option value="">All dates</option>';
-    const dayOrder = ['Thursday','Friday','Saturday','Sunday','Monday','Tuesday','Wednesday'];
-    const sorted = [...seen.entries()].sort((a,b) => dayOrder.indexOf(a[0]) - dayOrder.indexOf(b[0]));
-    sorted.forEach(([day, label]) => {
-      const opt = document.createElement('option');
-      opt.value = day;
-      opt.textContent = label;
-      dateSelect.appendChild(opt);
-    });
+    dateSelect.innerHTML = `
+      <option value="">All dates</option>
+      <option value="Wednesday">Wednesday — 6/3/26</option>
+      <option value="Thursday">Thursday — 6/4/26</option>
+      <option value="Friday">Friday — 6/5/26</option>
+      <option value="Saturday">Saturday — 6/6/26</option>
+      <option value="Sunday">Sunday — 6/7/26</option>
+      <option value="Multiday">Multiday</option>
+    `;
 
     const list = document.getElementById('event-list');
     const noRes = document.getElementById('no-results');
@@ -696,3 +697,4 @@ init();
 </script>
 </body>
 </html>
+  
