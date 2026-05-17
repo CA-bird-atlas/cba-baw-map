@@ -539,11 +539,21 @@ function toggleCard(idx) {
     card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
-  if (markers[idx]) {
-    const el = markers[idx]._icon?.querySelector('.map-num-marker');
-    if (el) el.classList.add('highlight');
-    map.panTo(markers[idx].getLatLng(), { animate: true });
-  }
+if (markers[idx]) {
+  const latlng = markers[idx].getLatLng();
+
+  const el = markers[idx]._icon?.querySelector('.map-num-marker');
+  if (el) el.classList.add('highlight');
+
+  map.flyTo(latlng, Math.max(map.getZoom(), 12), {
+    animate: true,
+    duration: 0.8
+  });
+
+  requestAnimationFrame(() => {
+    markers[idx].bringToFront();
+  });
+}
 }
 
 function createMarker(ev, idx) {
