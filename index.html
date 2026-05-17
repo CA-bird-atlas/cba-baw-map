@@ -53,7 +53,7 @@
     padding: 12px 20px;
     flex-shrink: 0;
     display: flex;
-    align-items: center;
+    align-items: right;
     gap: 12px;
     border-bottom: 1px solid rgba(0,0,0,0.1);
   }
@@ -93,7 +93,29 @@
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
+  
+  #share-buttons {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 
+.share-btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.9);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.share-btn:hover {
+  background: rgba(255,255,255,0.18);
+}
   /* Main layout */
   #main {
     display: flex;
@@ -358,6 +380,11 @@
     </div>
     <h1><span class="pre">California Bird Atlas </span><span class="big">Big Weekend</span><span class="year"> 2026</span></h1>
     <span class="subtitle" id="header-count"></span>
+
+<div id="share-buttons">
+  <button class="share-btn" onclick="sharePage(this)">Share</button>
+  <button class="share-btn" onclick="openEmbed()">Embed</button>
+</div>
   </div>
   <div id="main">
     <div id="sidebar">
@@ -383,6 +410,23 @@
 <div id="loading">
   <div class="spinner"></div>
   <span>Loading events…</span>
+</div>
+
+
+<div id="embed-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; padding:16px; border-radius:10px; width:420px; max-width:90vw;">
+    <div style="font-weight:600; margin-bottom:8px;">Embed this map</div>
+    <div style="font-size:12px; color:#666; margin-bottom:10px;">
+      Paste this into Squarespace, WordPress, or any site.
+    </div>
+
+    <textarea id="embed-code" style="width:100%; height:110px; font-size:12px;"></textarea>
+
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+      <button onclick="closeEmbed()" style="padding:6px 10px;">Close</button>
+      <button onclick="copyEmbed()" style="padding:6px 10px;">Copy</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -674,6 +718,56 @@ async function init() {
 }
 
 init();
+
+function sharePage(btn) {
+  const url = window.location.href;
+
+  if (navigator.share) {
+    navigator.share({
+      title: document.title,
+      url: url
+    }).catch(() => {});
+    return;
+  }
+
+  navigator.clipboard.writeText(url).then(() => {
+    const original = btn.textContent;
+    btn.textContent = "Copied!";
+    setTimeout(() => btn.textContent = original, 1200);
+  });
+}
+
+function copyLink() {
+  const url = window.location.href;
+
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.querySelector('[onclick="sharePage()"]');
+    if (!btn) return;
+
+    const original = btn.textContent;
+    btn.textContent = "Copied!";
+    setTimeout(() => btn.textContent = original, 1200);
+  });
+}
+
+function openEmbed() {
+  const url = window.location.href;
+
+  const embedCode = `<iframe src="${url}" style="width:100%; height:80vh; border:0; border-radius:12px;" loading="lazy"></iframe>`;
+
+  document.getElementById("embed-code").value = embedCode;
+  document.getElementById("embed-modal").style.display = "flex";
+}
+
+function closeEmbed() {
+  document.getElementById("embed-modal").style.display = "none";
+}
+
+function copyEmbed() {
+  const textarea = document.getElementById("embed-code");
+  textarea.select();
+  navigator.clipboard.writeText(textarea.value);
+}
 </script>
 </body>
 </html>
