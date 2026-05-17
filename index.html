@@ -26,7 +26,7 @@
     --card-active: #eef3fb;
     --filter-bg: #f5f3ef;
     --header-bg: #1a3a2a;
-    --header-text: #e8f5ec;
+    --header-text: #1a1a1a;
     --shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
 
@@ -50,22 +50,46 @@
   #header {
     background: var(--header-bg);
     color: var(--header-text);
-    padding: 14px 20px;
+    padding: 12px 20px;
     flex-shrink: 0;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
   }
   #header h1 {
     font-family: 'DM Serif Display', serif;
-    font-size: 18px;
     font-weight: 400;
     letter-spacing: 0.01em;
-    color: #fff;
+    color: #1a1a1a;
+    line-height: 1.2;
+    font-size: 18px;
+  }
+  #header h1 .pre {
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: rgba(255,255,255,0.8);
+    font-family: 'DM Serif Display', serif;
+  }
+  #header h1 .big {
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.01em;
+  }
+  #header h1 .year {
+    font-size: 14px;
+    font-weight: 500;
+    font-style: normal;
+    color: #6ee7a0;
+    margin-left: 6px;
+    letter-spacing: 0.01em;
+    font-family: 'DM Sans', sans-serif;
   }
   #header .subtitle {
     font-size: 12px;
-    color: rgba(255,255,255,0.55);
+    color: rgba(255,255,255,0.45);
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
@@ -329,7 +353,10 @@
 <body>
 <div id="app">
   <div id="header">
-    <h1>California Bird Atlas Big Weekend</h1>
+    <div style="width:32px;height:32px;border-radius:50%;background:#fff;border:8px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <img src="https://images.squarespace-cdn.com/content/v1/68daf71f4bdb0b427f11d8b1/5a538607-bc04-4131-97f3-9bcd1c8b3848/favicon.ico?format=100w" alt="California Bird Atlas logo" style="width:30px;height:30px;object-fit:contain;">
+    </div>
+    <h1><span class="pre">California Bird Atlas </span><span class="big">Big Weekend</span><span class="year"> 2026</span></h1>
     <span class="subtitle" id="header-count"></span>
   </div>
   <div id="main">
@@ -342,10 +369,6 @@
         </select>
         <select id="filter-date">
           <option value="">All dates</option>
-          <option value="Thursday">Thursday</option>
-          <option value="Friday">Friday</option>
-          <option value="Saturday">Saturday</option>
-          <option value="Sunday">Sunday</option>
         </select>
       </div>
       <div id="count-bar">Loading events…</div>
@@ -438,7 +461,7 @@ function normType(t) {
   return 'Field Trip';
 }
 
-function typeLabel(t) { return t === 'Community' ? 'Community' : 'Field Trip'; }
+function typeLabel(t) { return t === 'Community' ? 'Community Event' : 'Field Trip'; }
 
 function typeCls(t) { return t === 'Community' ? 'com' : 'ft'; }
 
@@ -448,6 +471,16 @@ function dayName(dateStr) {
   const d = new Date(dateStr);
   if (isNaN(d)) return dateStr;
   return d.toLocaleDateString('en-US', { weekday: 'long' });
+}
+
+// ---- Short date label e.g. "Thursday — 6/4/26" ----
+function dayLabel(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
+  const short = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
+  return `${weekday} — ${short}`;
 }
 
 // ---- Build sidebar card ----
@@ -474,7 +507,7 @@ function buildCard(ev, idx) {
         </div>
         <div class="card-meta">
           ${dateDisplay}<span class="dot">·</span>${ev['Time'] || ''}
-          ${ev['Organizer'] ? `<br>${ev['Organizer']}` : ''}
+          ${ev['Organizer'] ? `<br><span style="font-weight:500;color:var(--text)">Organizer:</span> ${ev['Organizer']}` : ''}
         </div>
       </div>
     </div>
@@ -607,9 +640,26 @@ async function init() {
     allEvents.forEach(ev => {
       ev._type = normType(ev['Event type']);
       ev._day = dayName(ev['Date of Event']);
+      ev._dayLabel = dayLabel(ev['Date of Event']);
     });
     // Sort north to south (highest lat first)
     allEvents.sort((a, b) => parseFloat(b['Lat'] || 0) - parseFloat(a['Lat'] || 0));
+
+    // Build date filter options dynamically from actual event dates
+    const seen = new Map();
+    allEvents.forEach(ev => {
+      if (ev._day && !seen.has(ev._day)) seen.set(ev._day, ev._dayLabel);
+    });
+    const dateSelect = document.getElementById('filter-date');
+    dateSelect.innerHTML = '<option value="">All dates</option>';
+    const dayOrder = ['Thursday','Friday','Saturday','Sunday','Monday','Tuesday','Wednesday'];
+    const sorted = [...seen.entries()].sort((a,b) => dayOrder.indexOf(a[0]) - dayOrder.indexOf(b[0]));
+    sorted.forEach(([day, label]) => {
+      const opt = document.createElement('option');
+      opt.value = day;
+      opt.textContent = label;
+      dateSelect.appendChild(opt);
+    });
 
     const list = document.getElementById('event-list');
     const noRes = document.getElementById('no-results');
