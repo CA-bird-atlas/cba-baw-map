@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>California Bird Atlas Big Weekend</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ft: #1D6FB5;
+    --ft-light: #DBEAFE;
+    --ft-text: #1E40AF;
+    --com: #2A7D4F;
+    --com-light: #DCFCE7;
+    --com-text: #15603A;
+    --border: rgba(0,0,0,0.1);
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --bg: #faf9f7;
+    --sidebar-bg: #fff;
+    --card-hover: #f5f3ef;
+    --card-active: #eef3fb;
+    --filter-bg: #f5f3ef;
+    --header-bg: #1a3a2a;
+    --header-text: #e8f5ec;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-height: 100vh;
+  }
+
+  /* Header */
+  #header {
+    background: var(--header-bg);
+    color: var(--header-text);
+    padding: 14px 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  #header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    color: #fff;
+  }
+  #header .subtitle {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  /* Main layout */
+  #main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  #sidebar {
+    width: 360px;
+    min-width: 360px;
+    display: flex;
+    flex-direction: column;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  /* Filters */
+  #filters {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--filter-bg);
+    display: flex;
+    gap: 8px;
+  }
+  #filters select {
+    flex: 1;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 26px;
+    cursor: pointer;
+  }
+  #filters select:focus { outline: 2px solid var(--ft); outline-offset: 1px; }
+
+  #count-bar {
+    padding: 8px 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--filter-bg);
+  }
+
+  /* Event list */
+  #event-list {
+    overflow-y: auto;
+    flex: 1;
+    scroll-behavior: smooth;
+  }
+  #event-list::-webkit-scrollbar { width: 4px; }
+  #event-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+
+  .event-card {
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .event-card:hover { background: var(--card-hover); }
+  .event-card.active { background: var(--card-active); }
+
+  .card-summary {
+    padding: 12px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .num-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #fff;
+  }
+  .num-badge.ft { background: var(--ft); }
+  .num-badge.com { background: var(--com); }
+
+  .card-info { flex: 1; min-width: 0; }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+  .card-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.35;
+    flex: 1;
+  }
+
+  .pill {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .pill.ft { background: var(--ft-light); color: var(--ft-text); }
+  .pill.com { background: var(--com-light); color: var(--com-text); }
+
+  .card-meta {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .card-meta .dot { margin: 0 3px; opacity: 0.4; }
+
+  /* Expanded detail */
+  .card-detail {
+    display: none;
+    padding: 0 14px 14px 50px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .card-detail.open { display: block; }
+
+  .detail-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 4px;
+    align-items: baseline;
+  }
+  .detail-label {
+    font-size: 10.5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(0,0,0,0.35);
+    min-width: 72px;
+    flex-shrink: 0;
+  }
+  .detail-val { color: var(--text); font-size: 12px; }
+
+  .detail-desc {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+  }
+
+  .event-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ft);
+    text-decoration: none;
+  }
+  .event-link:hover { text-decoration: underline; }
+
+  .chevron {
+    font-size: 10px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    margin-top: 5px;
+    line-height: 1;
+  }
+  .event-card.active .chevron { transform: rotate(180deg); }
+
+  /* No results */
+  #no-results {
+    display: none;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* Map */
+  #map {
+    flex: 1;
+    z-index: 0;
+  }
+
+  /* Leaflet marker overrides */
+  .leaflet-marker-icon { border: none !important; background: none !important; }
+
+  .map-num-marker {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: #fff;
+    border: 2px solid rgba(255,255,255,0.9);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .map-num-marker.ft { background: var(--ft); }
+  .map-num-marker.com { background: var(--com); }
+  .map-num-marker.highlight {
+    transform: scale(1.25);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+    z-index: 9999 !important;
+  }
+
+  /* Loading / error */
+  #loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(250,249,247,0.85);
+    z-index: 1000;
+    font-size: 13px;
+    color: var(--text-muted);
+    flex-direction: column;
+    gap: 10px;
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--ft);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 700px) {
+    #main { flex-direction: column; }
+    #sidebar { width: 100%; min-width: unset; height: 50vh; border-right: none; border-bottom: 1px solid var(--border); }
+    #map { height: 50vh; flex: none; }
+    #header { flex-direction: column; gap: 2px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>California Bird Atlas Big Weekend</h1>
+    <span class="subtitle" id="header-count"></span>
+  </div>
+  <div id="main">
+    <div id="sidebar">
+      <div id="filters">
+        <select id="filter-type">
+          <option value="">All event types</option>
+          <option value="Field Trip">Field Trip</option>
+          <option value="Community">Community</option>
+        </select>
+        <select id="filter-date">
+          <option value="">All dates</option>
+          <option value="Thursday">Thursday</option>
+          <option value="Friday">Friday</option>
+          <option value="Saturday">Saturday</option>
+          <option value="Sunday">Sunday</option>
+        </select>
+      </div>
+      <div id="count-bar">Loading events…</div>
+      <div id="event-list">
+        <div id="no-results">No events match your filters.</div>
+      </div>
+    </div>
+    <div id="map"></div>
+  </div>
+</div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <span>Loading events…</span>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// =============================================================
+//  CONFIGURATION — update these two values
+// =============================================================
+const SHEET_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfQUd290tWehoxl2cIOKry9hKR4XddAT4Iv1qf1s3xAlHchS-ke4qPq6ddIWNUaIAfs9aTHAkluLy3/pub?gid=0&single=true&output=csv";
+//  ^ Replace with "Publish to web" CSV link from Google Sheets.
+//  File → Share → Publish to web → Sheet tab → CSV → Copy link
+
+//  Expected columns (order doesn't matter, match by header name):
+//  Contact, Organizer, Event Name, Date of Event, Time, Location,
+//  Event link, Event type, Leaders, Description, Access, Capacity,
+//  Lat, Lng
+// =============================================================
+
+const map = L.map('map', {
+  center: [37.5, -119.5],
+  zoom: 6,
+  zoomControl: true
+});
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19
+}).addTo(map);
+
+let allEvents = [];
+let markers = [];
+let activeIdx = null;
+
+// ---- Parse CSV (handles quoted fields with commas) ----
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = splitCSVLine(lines[0]).map(h => h.trim());
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = splitCSVLine(lines[i]);
+    if (vals.every(v => !v.trim())) continue;
+    const obj = {};
+    headers.forEach((h, j) => { obj[h] = (vals[j] || '').trim(); });
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function splitCSVLine(line) {
+  const result = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur);
+  return result;
+}
+
+// ---- Normalise type ----
+function normType(t) {
+  if (!t) return 'Field Trip';
+  const l = t.toLowerCase();
+  if (l.includes('community')) return 'Community';
+  return 'Field Trip';
+}
+
+function typeCls(t) { return t === 'Community' ? 'com' : 'ft'; }
+
+// ---- Day name from date string (flexible) ----
+function dayName(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return d.toLocaleDateString('en-US', { weekday: 'long' });
+}
+
+// ---- Build sidebar card ----
+function buildCard(ev, idx) {
+  const cls = typeCls(ev._type);
+  const num = idx + 1;
+  const day = ev._day;
+  const dateDisplay = ev['Date of Event'] || '';
+
+  const div = document.createElement('div');
+  div.className = 'event-card';
+  div.dataset.idx = idx;
+  div.dataset.type = ev._type;
+  div.dataset.day = day;
+
+  div.innerHTML = `
+    <div class="card-summary">
+      <div class="num-badge ${cls}">${num}</div>
+      <div class="card-info">
+        <div class="card-top">
+          <span class="card-name">${ev['Event Name'] || 'Unnamed Event'}</span>
+          <span class="pill ${cls}">${ev._type}</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="card-meta">
+          ${dateDisplay}<span class="dot">·</span>${ev['Time'] || ''}
+          ${ev['Organizer'] ? `<br>${ev['Organizer']}` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="card-detail" id="detail-${idx}">
+      ${ev['Leaders'] ? `<div class="detail-row"><span class="detail-label">Leaders</span><span class="detail-val">${ev['Leaders']}</span></div>` : ''}
+      ${ev['Location'] ? `<div class="detail-row"><span class="detail-label">Location</span><span class="detail-val">${ev['Location']}</span></div>` : ''}
+      ${ev['Access'] ? `<div class="detail-row"><span class="detail-label">Access</span><span class="detail-val">${ev['Access']}</span></div>` : ''}
+      ${ev['Capacity'] ? `<div class="detail-row"><span class="detail-label">Capacity</span><span class="detail-val">${ev['Capacity']}</span></div>` : ''}
+      ${ev['Contact'] ? `<div class="detail-row"><span class="detail-label">Contact</span><span class="detail-val">${ev['Contact']}</span></div>` : ''}
+      ${ev['Description'] ? `<div class="detail-desc">${ev['Description']}</div>` : ''}
+      ${ev['Event link'] ? `<a class="event-link" href="${ev['Event link']}" target="_blank" rel="noopener">View event details →</a>` : ''}
+    </div>
+  `;
+
+  div.addEventListener('click', () => toggleCard(idx));
+  return div;
+}
+
+// ---- Toggle card expand ----
+function toggleCard(idx) {
+  const wasActive = activeIdx === idx;
+
+  // collapse previous
+  if (activeIdx !== null) {
+    const prev = document.querySelector(`.event-card[data-idx="${activeIdx}"]`);
+    if (prev) {
+      prev.classList.remove('active');
+      document.getElementById(`detail-${activeIdx}`).classList.remove('open');
+    }
+    if (markers[activeIdx]) {
+      markers[activeIdx]._icon?.querySelector('.map-num-marker')?.classList.remove('highlight');
+    }
+  }
+
+  if (wasActive) { activeIdx = null; return; }
+
+  activeIdx = idx;
+  const card = document.querySelector(`.event-card[data-idx="${idx}"]`);
+  if (card) {
+    card.classList.add('active');
+    document.getElementById(`detail-${idx}`)?.classList.add('open');
+    card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  if (markers[idx]) {
+    const el = markers[idx]._icon?.querySelector('.map-num-marker');
+    if (el) el.classList.add('highlight');
+    map.panTo(markers[idx].getLatLng(), { animate: true });
+  }
+}
+
+// ---- Create Leaflet marker ----
+function createMarker(ev, idx) {
+  const lat = parseFloat(ev['Lat']);
+  const lng = parseFloat(ev['Lng']);
+  if (isNaN(lat) || isNaN(lng)) return null;
+
+  const cls = typeCls(ev._type);
+  const num = idx + 1;
+
+  const icon = L.divIcon({
+    className: '',
+    html: `<div class="map-num-marker ${cls}">${num}</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
+  });
+
+  const marker = L.marker([lat, lng], { icon }).addTo(map);
+  marker.on('click', () => {
+    const card = document.querySelector(`.event-card[data-idx="${idx}"]`);
+    if (card && !isFiltered(card)) {
+      toggleCard(idx);
+    }
+  });
+  return marker;
+}
+
+function isFiltered(card) {
+  return card.style.display === 'none';
+}
+
+// ---- Filter logic ----
+function applyFilters() {
+  const typeVal = document.getElementById('filter-type').value;
+  const dayVal = document.getElementById('filter-date').value;
+
+  let visible = 0;
+  document.querySelectorAll('.event-card').forEach(card => {
+    const idx = parseInt(card.dataset.idx);
+    const typeMatch = !typeVal || card.dataset.type === typeVal;
+    const dayMatch = !dayVal || card.dataset.day === dayVal;
+    const show = typeMatch && dayMatch;
+    card.style.display = show ? '' : 'none';
+    if (markers[idx]) {
+      const el = markers[idx]._icon?.querySelector('.map-num-marker');
+      if (el) {
+        el.style.opacity = show ? '1' : '0.2';
+        el.style.pointerEvents = show ? '' : 'none';
+      }
+    }
+    if (show) visible++;
+  });
+
+  const total = allEvents.length;
+  document.getElementById('count-bar').textContent =
+    visible === total
+      ? `${total} events`
+      : `${visible} of ${total} events`;
+
+  document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
+
+  // collapse active card if now filtered out
+  if (activeIdx !== null) {
+    const activeCard = document.querySelector(`.event-card[data-idx="${activeIdx}"]`);
+    if (activeCard && activeCard.style.display === 'none') {
+      activeIdx = null;
+    }
+  }
+}
+
+// ---- Main: fetch & render ----
+async function init() {
+  try {
+    const resp = await fetch(SHEET_CSV_URL);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+    const rows = parseCSV(text);
+
+    allEvents = rows.filter(r => r['Event Name'] || r['Location']);
+    allEvents.forEach(ev => {
+      ev._type = normType(ev['Event type']);
+      ev._day = dayName(ev['Date of Event']);
+    });
+
+    const list = document.getElementById('event-list');
+    const noRes = document.getElementById('no-results');
+    list.innerHTML = '';
+    list.appendChild(noRes);
+
+    const bounds = [];
+    allEvents.forEach((ev, idx) => {
+      list.appendChild(buildCard(ev, idx));
+      const m = createMarker(ev, idx);
+      markers[idx] = m;
+      if (m) bounds.push(m.getLatLng());
+    });
+
+    if (bounds.length > 0) {
+      map.fitBounds(L.latLngBounds(bounds).pad(0.15));
+    }
+
+    document.getElementById('count-bar').textContent = `${allEvents.length} events`;
+    document.getElementById('header-count').textContent = `${allEvents.length} events`;
+
+    document.getElementById('filter-type').addEventListener('change', applyFilters);
+    document.getElementById('filter-date').addEventListener('change', applyFilters);
+
+  } catch (err) {
+    document.getElementById('count-bar').textContent = 'Could not load events.';
+    console.error('Bird Atlas map error:', err);
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
