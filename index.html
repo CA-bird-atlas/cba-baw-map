@@ -394,39 +394,51 @@ let activeIdx = null;
 
 // ---- Parse CSV (handles quoted fields with commas) ----
 function parseCSV(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) return [];
-  const headers = splitCSVLine(lines[0]).map(h => h.trim());
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const vals = splitCSVLine(lines[i]);
+  const rows = splitCSVAll(text);
+  if (rows.length < 2) return [];
+  const headers = rows[0].map(h => h.trim());
+  const result = [];
+  for (let i = 1; i < rows.length; i++) {
+    const vals = rows[i];
     if (vals.every(v => !v.trim())) continue;
     const obj = {};
     headers.forEach((h, j) => { obj[h] = (vals[j] || '').trim(); });
-    rows.push(obj);
+    result.push(obj);
   }
-  return rows;
+  return result;
 }
 
-function splitCSVLine(line) {
-  const result = []; let cur = ''; let inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') { inQ = !inQ; }
-    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
-    else { cur += c; }
+function splitCSVAll(text) {
+  const rows = [];
+  let row = [], cur = '', inQ = false, i = 0;
+  while (i < text.length) {
+    const c = text[i];
+    if (c === '"') {
+      if (inQ && text[i+1] === '"') { cur += '"'; i += 2; continue; }
+      inQ = !inQ; i++; continue;
+    }
+    if (c === ',' && !inQ) { row.push(cur); cur = ''; i++; continue; }
+    if ((c === '\n' || (c === '\r' && text[i+1] === '\n')) && !inQ) {
+      row.push(cur); cur = '';
+      rows.push(row); row = [];
+      if (c === '\r') i++;
+      i++; continue;
+    }
+    cur += c; i++;
   }
-  result.push(cur);
-  return result;
+  if (cur || row.length) { row.push(cur); rows.push(row); }
+  return rows;
 }
 
 // ---- Normalise type ----
 function normType(t) {
   if (!t) return 'Field Trip';
-  const l = t.toLowerCase();
+  const l = t.toLowerCase().trim();
   if (l.includes('community')) return 'Community';
   return 'Field Trip';
 }
+
+function typeLabel(t) { return t === 'Community' ? 'Community' : 'Field Trip'; }
 
 function typeCls(t) { return t === 'Community' ? 'com' : 'ft'; }
 
@@ -457,7 +469,7 @@ function buildCard(ev, idx) {
       <div class="card-info">
         <div class="card-top">
           <span class="card-name">${ev['Event Name'] || 'Unnamed Event'}</span>
-          <span class="pill ${cls}">${ev._type}</span>
+          <span class="pill ${cls}">${typeLabel(ev._type)}</span>
           <span class="chevron">▼</span>
         </div>
         <div class="card-meta">
@@ -596,6 +608,8 @@ async function init() {
       ev._type = normType(ev['Event type']);
       ev._day = dayName(ev['Date of Event']);
     });
+    // Sort north to south (highest lat first)
+    allEvents.sort((a, b) => parseFloat(b['Lat'] || 0) - parseFloat(a['Lat'] || 0));
 
     const list = document.getElementById('event-list');
     const noRes = document.getElementById('no-results');
