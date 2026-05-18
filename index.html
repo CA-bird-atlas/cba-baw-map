@@ -17,6 +17,9 @@
     --com: #2A7D4F;
     --com-light: #DCFCE7;
     --com-text: #15603A;
+    --mtu: #4C6FFF;
+    --mtu-light: #E8EEFF;
+    --mtu-text: #2440A8;
     --border: rgba(0,0,0,0.1);
     --text: #1a1a1a;
     --text-muted: #666;
@@ -234,6 +237,7 @@
   }
   .num-badge.ft { background: var(--ft); }
   .num-badge.com { background: var(--com); }
+  .num-badge.mtu { background: var(--mtu); }
 
   .card-info { flex: 1; min-width: 0; }
 
@@ -262,6 +266,7 @@
   }
   .pill.ft { background: var(--ft-light); color: var(--ft-text); }
   .pill.com { background: var(--com-light); color: var(--com-text); }
+  .pill.mtu { background: var(--mtu-light); color: var(--mtu-text); }
 
   .card-meta {
     font-size: 11.5px;
@@ -345,14 +350,14 @@
   .leaflet-marker-icon { border: none !important; background: none !important; }
 
   .map-num-marker {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
     color: #fff;
     border: 2px solid rgba(255,255,255,0.9);
@@ -362,6 +367,7 @@
   }
   .map-num-marker.ft { background: var(--ft); }
   .map-num-marker.com { background: var(--com); }
+  .map-num-marker.mtu { background: var(--mtu); }
   .map-num-marker.highlight {
     transform: scale(1.25);
     box-shadow: 0 3px 10px rgba(0,0,0,0.4);
@@ -419,6 +425,7 @@
           <option value="">All event types</option>
           <option value="Field Trip">Field Trip</option>
           <option value="Community">Community Event</option>
+          <option value="Meetup">Atlasing Meetup</option>
         </select>
         <select id="filter-date">
           <option value="">All dates</option>
@@ -516,14 +523,25 @@ function splitCSVAll(text) {
 
 function normType(t) {
   if (!t) return 'Field Trip';
+
   const l = t.toLowerCase().trim();
+
   if (l.includes('community')) return 'Community';
+  if (l.includes('meetup')) return 'Meetup';
+
   return 'Field Trip';
 }
 
-function typeLabel(t) { return t === 'Community' ? 'Community Event' : 'Field Trip'; }
-function typeCls(t) { return t === 'Community' ? 'com' : 'ft'; }
-
+function typeLabel(t) {
+  if (t === 'Community') return 'Community Event';
+  if (t === 'Meetup') return 'Atlasing Meetup';
+  return 'Field Trip';
+}
+function typeCls(t) {
+  if (t === 'Community') return 'com';
+  if (t === 'Meetup') return 'mtu';
+  return 'ft';
+}
 function dayName(dateStr) {
   if (!dateStr) return '';
   if (dateStr.includes('-') && dateStr.replace(/\d/g,'').includes('-')) {
