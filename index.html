@@ -433,7 +433,6 @@
           <option value="">All event types</option>
           <option value="Field Trip">Field Trip</option>
           <option value="Community">Community Event</option>
-          <option value="Meetup">Atlasing Meetup</option>
         </select>
         <select id="filter-date">
           <option value="">All dates</option>
@@ -600,7 +599,7 @@ function buildCard(ev, idx) {
     <div class="card-detail" id="detail-${idx}">
       ${ev['Leaders'] ? `<div class="detail-row"><span class="detail-label">Leaders</span><span class="detail-val">${ev['Leaders']}</span></div>` : ''}
       ${ev['Location'] ? `<div class="detail-row"><span class="detail-label">Location</span><span class="detail-val">${ev['Location']}</span></div>` : ''}
-      ${ev['Registration'] ? `<div class="detail-row"><span class="detail-label">Registration</span><span class="detail-val">${ev['Registration']}</span></div>` : ''}
+      ${ev['Access'] ? `<div class="detail-row"><span class="detail-label">Registration</span><span class="detail-val">${ev['Access']}</span></div>` : ''}
       ${ev['Capacity'] ? `<div class="detail-row"><span class="detail-label">Capacity</span><span class="detail-val">${ev['Capacity']}</span></div>` : ''}
       ${ev['Contact'] ? `<div class="detail-row"><span class="detail-label">Contact</span><span class="detail-val">${ev['Contact']}</span></div>` : ''}
       ${ev['Description'] ? `<div class="detail-desc">${ev['Description']}</div>` : ''}
